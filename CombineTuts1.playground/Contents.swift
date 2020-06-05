@@ -27,20 +27,20 @@ import Combine
 var subscriptions = Set<AnyCancellable>()
 
 example(of: "Publisher") {
-    // create notification name
+    // Create notification name
     let notification = Notification.Name("MyNotification")
 
-    // get value in notification publisher
+    // Get value in notification publisher
     let _ = NotificationCenter.default.publisher(for: notification,
                                                          object: nil)
-    // publisher knows about 2 events:
+    // Publisher knows about 2 events:
     // (1) Values - known as elements
     // (2) Completion event
     // Can publish zero or more values
 
     let center = NotificationCenter.default
 
-    // create observer to listen for notification
+    // Create observer to listen for notification
     let observer = center.addObserver(forName: notification,
                                       object: nil,
                                       queue: nil) { (notification) in
@@ -71,7 +71,7 @@ example(of: "Subscriber") {
     subscription.cancel()
 }
 
-// Create a publisher using `Just`, which lets you
+// :Create a publisher using `Just`, which lets you
 //    create a publisher from a primative value type
 //    create a subscription to the publisher, and print
 //        message of recieved event
@@ -94,3 +94,24 @@ example(of: "Just") {
         print("Received value (another)", $0)
     })
 }
+
+// :Subscribe with assign(to: on)
+// enables you to assign the received value to a
+//    KVO-compliant property of an object.
+
+example(of: "assign(to:on)") {
+    class SomeObject {
+        var value: String = "" {
+            didSet {
+                print (value)
+            }
+        }
+    }
+
+    let object = SomeObject()
+
+    let publisher = ["Hello", "world!"].publisher
+
+    _ = publisher.assign(to: \.value, on: object)
+}
+
