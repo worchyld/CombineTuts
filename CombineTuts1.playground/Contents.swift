@@ -58,8 +58,10 @@ example(of: "Subscriber") {
     let publisher = NotificationCenter.default .publisher(for: myNotification, object: nil)
     let center = NotificationCenter.default
 
-    // subscribe with sink
+    // Subscribe with sink
     // Attaches a subscriber with closure-based behavior.
+    // .sink operator will continue to receive as many values
+    //    as the publisher emits.
     let subscription = publisher.sink { _ in
         print ("notification recieved from a publisher")
     }
@@ -69,3 +71,16 @@ example(of: "Subscriber") {
     subscription.cancel()
 }
 
+// Create a publisher using `Just`, which lets you
+//    create a publisher from a primative value type
+//    create a subscription to the publisher, and print
+//        message of recieved event
+example(of: "Just") {
+    let just = Just("Hello world")
+    _ = just.sink(
+        receiveCompletion: {
+        print ("Recieved completion", $0)
+    }, receiveValue: {
+        print ("Recieved value", $0)
+    })
+}
