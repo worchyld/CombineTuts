@@ -117,8 +117,9 @@ example(of: "assign(to:on)") {
 }
 
 example(of: "Custom subscriber") {
-    // be a publisher of 1-6 int
+    // be a publisher of elements
     let publisher = (1...6).publisher
+    //let publisher = ["A", "B", "C", "D", "E", "F"].publisher
 
     final class IntSubscriber: Subscriber {
         typealias Input = Int
@@ -134,10 +135,10 @@ example(of: "Custom subscriber") {
 
             // publisher has finite number of values. demanding 3
             // this won't hit the completion request
-            //return .none
+            return .none
 
             // recieve all values
-            return .unlimited
+            //return .unlimited
         }
 
         func receive(completion: Subscribers.Completion<Never>) {
