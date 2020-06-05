@@ -110,8 +110,10 @@ example(of: "assign(to:on)") {
 
     let object = SomeObject()
 
+    // create a publisher from array of strings
     let publisher = ["Hello", "world!"].publisher
 
+    // assign each value recieved to the value property of the object
     _ = publisher.assign(to: \.value, on: object)
 }
 
