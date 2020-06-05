@@ -52,3 +52,20 @@ example(of: "Publisher") {
     center.removeObserver(observer)
 
 }
+
+example(of: "Subscriber") {
+    let myNotification = Notification.Name("MyNotification")
+    let publisher = NotificationCenter.default .publisher(for: myNotification, object: nil)
+    let center = NotificationCenter.default
+
+    // subscribe with sink
+    // Attaches a subscriber with closure-based behavior.
+    let subscription = publisher.sink { _ in
+        print ("notification recieved from a publisher")
+    }
+
+    center.post(name: myNotification, object: nil)
+
+    subscription.cancel()
+}
+
