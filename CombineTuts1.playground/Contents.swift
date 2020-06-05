@@ -50,7 +50,6 @@ example(of: "Publisher") {
     center.post(name: notification, object: nil)
 
     center.removeObserver(observer)
-
 }
 
 example(of: "Subscriber") {
@@ -116,4 +115,38 @@ example(of: "assign(to:on)") {
     // assign each value recieved to the value property of the object
     _ = publisher.assign(to: \.value, on: object)
 }
+
+example(of: "Custom subscriber") {
+    // be a publisher of 1-6 int
+    let publisher = (1...6).publisher
+
+    final class IntSubscriber: Subscriber {
+        typealias Input = Int
+        typealias Failure = Never
+
+        func receive(subscription: Subscription) {
+            // set a max of 3 requests
+            subscription.request(.max(3))
+        }
+
+        func receive(_ input: Int) -> Subscribers.Demand {
+            print ("Received value:", input)
+
+            // publisher has finite number of values. demanding 3
+            // this won't hit the completion request
+            //return .none
+
+            // recieve all values
+            return .unlimited
+        }
+
+        func receive(completion: Subscribers.Completion<Never>) {
+            print ("recieved completion request", completion)
+        }
+    }
+
+    let subscriber = IntSubscriber()
+    publisher.subscribe(subscriber)
+}
+
 
