@@ -75,6 +75,8 @@ example(of: "Subscriber") {
 //    create a publisher from a primative value type
 //    create a subscription to the publisher, and print
 //        message of recieved event
+//  Just - A publisher that emits an output to each subscriber just once,
+//    and then finishes.
 example(of: "Just") {
     let just = Just("Hello world")
     _ = just.sink(
@@ -82,5 +84,13 @@ example(of: "Just") {
         print ("Recieved completion", $0)
     }, receiveValue: {
         print ("Recieved value", $0)
+    })
+
+    _ = just.sink(
+      receiveCompletion: {
+        print("Received completion (another)", $0)
+      },
+      receiveValue: {
+        print("Received value (another)", $0)
     })
 }
