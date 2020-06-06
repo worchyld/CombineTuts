@@ -150,4 +150,38 @@ example(of: "Custom subscriber") {
     publisher.subscribe(subscriber)
 }
 
+// :Example of future
+example(of: "Future") {
+    // emit an int & never fail
+     func futureIncrement(
+        integer: Int,
+        afterDelay delay: TimeInterval) -> Future<Int, Never> {
+        Future<Int, Never> { promise in
+          print("Original")
+          DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
+            promise(.success(integer + 1))
+          }
+        }
+      }
 
+    // create a future, firing in 3 seconds
+        let future = futureIncrement(integer: 1, afterDelay: 3)
+
+        // 2
+        future.sink(receiveCompletion: {
+            print($0)
+        },
+        receiveValue: {
+            print($0)
+        }) .store(in: &subscriptions)
+
+    // 2nd subscription
+    future.sink(receiveCompletion: {
+        print("Second", $0)
+
+    },
+    receiveValue: {
+        print("Second", $0)
+    })
+    .store(in: &subscriptions)
+}
