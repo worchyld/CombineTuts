@@ -283,6 +283,71 @@ example(of: "CurrentValueSubject") {
                 print("Second subscription:", $0)
         })
         .store(in: &subscriptions)
-    
+
     subject.send(completion: .finished)
+}
+
+example(of: "Dynamically adjusting demand") {
+    final class IntSubscriber: Subscriber {
+        typealias Input = Int
+        typealias Failure = Never
+
+        func receive(subscription: Subscription) {
+            subscription.request(.max(2))
+        }
+
+        func receive(_ input: Int) -> Subscribers.Demand {
+            print ("recieved input:", input)
+
+            switch input {
+            case 1:
+                return .max(2)
+            case 3:
+                return .max(1)
+            default:
+                return .none
+            }
+        }
+
+        func receive(completion: Subscribers.Completion<Never>) {
+            print ("Recieved completion:", completion)
+        }
+    }
+
+    let subcriber = IntSubscriber()
+
+    let subject = PassthroughSubject<Int, Never>()
+
+    subject.subscribe(subcriber)
+
+    subject.send(1)
+    subject.send(2)
+    subject.send(3)
+    subject.send(4)
+    subject.send(5)
+    subject.send(6)
+}
+
+// :TypeErasure
+// let subscribers subscribe to receive events from a
+//  publisher without being able to access additional
+//  details about that publisher
+
+/*
+  Type erasure allows you to hide details about the
+    publisher that you may not want to expose to subscribers */
+
+example(of: "typeerasure") {
+    let subject = PassthroughSubject<Int, Never>()
+    let publisher = subject.eraseToAnyPublisher()
+
+    // conforms to anypublisher
+    publisher
+        .sink(receiveValue: { print ($0) })
+        .store(in: &subscriptions)
+
+    subject.send(0)
+
+    // AnyPublisher does not have a send(_:) operator,
+    //  so new values cannot be added to
 }
