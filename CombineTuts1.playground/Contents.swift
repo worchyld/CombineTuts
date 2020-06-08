@@ -151,13 +151,16 @@ example(of: "Custom subscriber") {
 }
 
 // :Example of future
+/* After delay, 2nd subscrption recieves the same value,
+    future does not reexecute its promise */
+/*
 example(of: "Future") {
     // emit an int & never fail
      func futureIncrement(
         integer: Int,
         afterDelay delay: TimeInterval) -> Future<Int, Never> {
         Future<Int, Never> { promise in
-          print("Original")
+          print("Original") // prints straight away; future executes as soon as created
           DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
             promise(.success(integer + 1))
           }
@@ -184,4 +187,100 @@ example(of: "Future") {
         print("Second", $0)
     })
     .store(in: &subscriptions)
+}*/
+
+// :Example of `subject`
+/* Subject acts as a go-between non-Combine code to send
+    values to Combine subscribers */
+
+example(of: "PassthroughSubject") {
+    enum MyError: Error {
+        case test
+    }
+
+    // Custom subscriber object
+    final class StringSubscriber: Subscriber {
+        typealias Input = String
+        typealias Failure = MyError
+
+        func receive(subscription: Subscription) {
+            subscription.request(.max(2)) // set max to 2
+        }
+
+        func receive(_ input: String) -> Subscribers.Demand {
+            print ("recieved input ", input)
+            return input == "World" ? .max(1) : .none
+        }
+
+        func receive(completion: Subscribers.Completion<MyError>) {
+            print ("recieved completion", completion)
+        }
+    }
+
+    let subscriber = StringSubscriber()
+
+    // create instance of passthrough
+    let subject = PassthroughSubject<String, MyError>()
+
+    // subscribe
+    subject.subscribe(subscriber)
+
+    // create another subscription
+    let subscription = subject
+        .sink(receiveCompletion: { (completion) in
+            print ("recieved completion (sink):", completion)
+        }) { (value) in
+            print ("received value (sink):", value)
+    }
+
+    subject.send("hello")
+    subject.send("world")
+
+    subscription.cancel()
+    subject.send("Still here")
+
+
+    // demonstrates that once a publisher sends a single completion event,
+    //   error or otherwise; completion ends
+    subject.send(completion: .failure(MyError.test))
+    subject.send(completion: .finished)
+    subject.send("How about another one?") // does not fire, completion recieved
+}
+
+/* Instead of storing each subscription as a value,
+    you can store multiple subscriptions in a collection of
+    AnyCancellable. The collection will then automatically
+    cancel each subscription added to it when the collection
+    is about to be deinitialized. */
+
+example(of: "CurrentValueSubject") {
+    // create subscription set
+    var subscriptions = Set<AnyCancellable>()
+
+    // this will publish integers and never publish an error,
+    // with an initial value of 0.
+    let subject = CurrentValueSubject<Int, Never>(0)
+
+    // create a subscription to the subject and print values received from it.
+    subject.sink(receiveValue: { print($0) })
+        .store(in: &subscriptions) // 4
+
+
+    subject.send(1)
+    subject.send(2)
+
+    print(subject.value)
+
+    subject.value = 3
+
+    print(subject.value)
+
+    // create a subscription and print the received values.
+    // also store that subscription in the subscriptions set.
+     subject
+        .print()
+        .sink(receiveValue: {
+                print("Second subscription:", $0)
+        })
+        .store(in: &subscriptions)
 }
