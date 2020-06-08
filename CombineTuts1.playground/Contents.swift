@@ -283,4 +283,6 @@ example(of: "CurrentValueSubject") {
                 print("Second subscription:", $0)
         })
         .store(in: &subscriptions)
+    
+    subject.send(completion: .finished)
 }
